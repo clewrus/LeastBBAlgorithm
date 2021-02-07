@@ -9,4 +9,8 @@ class LabController {
 	solveForPoints( points ) {
 
 	}
+
+	findHull( points ) {
+		return this.hullEvaluater.evaluateForPoints( points );
+	}
 }

@@ -9,7 +9,7 @@ let solveButton;
 
 let controller;
 let points = [];
-
+let currentHull;
 
 function setup() {
 	let canvas = createCanvas( WIDTH, HEIGHT );
@@ -22,6 +22,7 @@ function setup() {
 function draw() {
 	background( 230 );
 	drawPoints();
+	drawHull();
 }
 
 function addMousePoint() {
@@ -49,7 +50,7 @@ function initializeButtons() {
 }
 
 function onSolveClicked () {
-
+	currentHull = controller.findHull( points );
 }
 
 function onGenRandomClicked () {
@@ -64,6 +65,7 @@ function onGenRandomClicked () {
 
 function onClearClicked () {
 	points.length = 0;
+	currentHull = null;
 }
 
 function drawPoints() {
@@ -71,4 +73,22 @@ function drawPoints() {
 	fill( 240, 20, 20 );
 
 	points.forEach( pos => ellipse( pos.x, pos.y, POINT_R ) );
+}
+
+function drawHull() {
+	if( !(currentHull instanceof Array) ) { return; }
+	if( currentHull.length <= 1 ) { return; }
+
+	for( let i = 0; i < currentHull.length - 1; i++ ) {
+		drawHullEdge( currentHull[i], currentHull[(i + 1)])
+	}
+
+	drawHullEdge( currentHull[0], currentHull[currentHull.length - 1] );
+}
+
+function drawHullEdge( v1, v2 ) {
+	stroke( 0 );
+	strokeWeight( 2 );
+
+	line( v1.x, v1.y, v2.x, v2.y );
 }
