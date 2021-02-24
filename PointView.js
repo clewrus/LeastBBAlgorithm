@@ -10,6 +10,7 @@ let solveButton;
 let controller;
 let points = [];
 let currentHull;
+let currentRect;
 
 function setup() {
 	let canvas = createCanvas( WIDTH, HEIGHT );
@@ -23,6 +24,8 @@ function draw() {
 	background( 230 );
 	drawPoints();
 	drawHull();
+
+	drawRect();
 }
 
 function addMousePoint() {
@@ -41,6 +44,9 @@ function initializeController() {
 function initializeButtons() {
 	solveButton = createButton( "Solve" );
 	solveButton.mouseClicked( onSolveClicked );
+
+	solveButton = createButton( "Next rect" );
+	solveButton.mouseClicked( onNextClicked );
 	
 	genRandomButton = createButton( "Generate random cloud" );
 	genRandomButton.mouseClicked( onGenRandomClicked );
@@ -51,6 +57,13 @@ function initializeButtons() {
 
 function onSolveClicked () {
 	currentHull = controller.findHull( points );
+	controller.solveForPoints( points );
+	
+	currentRect = controller.getNextRect();
+}
+
+function onNextClicked() {
+	currentRect = controller.getNextRect();
 }
 
 function onGenRandomClicked () {
@@ -66,6 +79,7 @@ function onGenRandomClicked () {
 function onClearClicked () {
 	points.length = 0;
 	currentHull = null;
+	currentRect = null;
 }
 
 function drawPoints() {
@@ -91,4 +105,12 @@ function drawHullEdge( v1, v2 ) {
 	strokeWeight( 2 );
 
 	line( v1.x, v1.y, v2.x, v2.y );
+}
+
+function drawRect() {
+	if( currentRect == null ) { return; }	
+	drawHullEdge( currentRect.min, currentRect.minMax );
+	drawHullEdge( currentRect.minMax, currentRect.max );
+	drawHullEdge( currentRect.max, currentRect.maxMin );
+	drawHullEdge( currentRect.maxMin, currentRect.min );
 }

@@ -29,8 +29,6 @@ class HullEvaluator {
 		}
 
 		lower.pop();
-
-		console.log( lower );
 	}
 
 	fillUpper( upper ) {
@@ -42,7 +40,6 @@ class HullEvaluator {
 		}
 
 		upper.pop();
-		console.log( upper );
 	}
 
 	cross(a, b, o) {

@@ -7,7 +7,19 @@ class LabController {
 	}
 
 	solveForPoints( points ) {
+		let convexHull = this.findHull( points );
+		
+		this.rectEnumerator.setHull( convexHull );
+		//this.algorithm.setRectEnumerator( this.rectEnumerator );
+		
+		//let solution = this.algorithm.solve();
+		//return solution;
+	}
 
+	getNextRect() {
+		const current = this.rectEnumerator.getCurrent();
+		this.rectEnumerator.next();
+		return current;
 	}
 
 	findHull( points ) {
