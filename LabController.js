@@ -15,6 +15,11 @@ class LabController {
         return solution;
     }
 
+    startRectEnumeration(points) {
+        let convexHull = this.findHull(points);
+        this.rectEnumerator.setHull(convexHull);
+    }
+
     getNextRect() {
         const current = this.rectEnumerator.getCurrent();
         this.rectEnumerator.next();

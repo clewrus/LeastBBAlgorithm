@@ -1,11 +1,17 @@
-const WIDTH = 500;
-const HEIGHT = 500;
+const TASK =
+    "На заданій множині з N точок побудувати чотирикутник найменшої площі,\
+ який би охоплював задану множину."
+
+const AUTHOR = "Author: Saitarly Oleksii";
+
 const POINT_R = 7;
 const NUM_OF_RAND_POINTS = 10;
 
 let clearButton;
 let genRandomButton;
 let solveButton;
+let nextRectButton;
+let enumerateButton;
 
 let controller;
 let points = [];
@@ -13,15 +19,17 @@ let currentHull;
 let currentRect;
 
 function setup() {
-    let canvas = createCanvas(WIDTH, HEIGHT);
+    initializeButtons();
+
+    let canvas = createCanvas(windowWidth - 50, windowHeight - 50);
     canvas.mouseClicked(addMousePoint);
 
     initializeController();
-    initializeButtons();
 }
 
 function draw() {
     background(230);
+
     drawPoints();
     drawHull();
 
@@ -42,11 +50,17 @@ function initializeController() {
 }
 
 function initializeButtons() {
+    createButton("The task").style("position", "absolute").style("top", 10).style("left", 10).mouseClicked(() => alert(TASK));
+    createButton("Author").style("position", "absolute").style("top", 40).style("left", 10).mouseClicked(() => alert(AUTHOR));
+
     solveButton = createButton("Solve");
     solveButton.mouseClicked(onSolveClicked);
 
-    solveButton = createButton("Next rect");
-    solveButton.mouseClicked(onNextClicked);
+    enumerateButton = createButton("Enumerate rects");
+    enumerateButton.mouseClicked(onStartRectsEnumeration);
+
+    nextRectButton = createButton("Next rect");
+    nextRectButton.mouseClicked(onNextClicked);
 
     genRandomButton = createButton("Generate random cloud");
     genRandomButton.mouseClicked(onGenRandomClicked);
@@ -58,7 +72,11 @@ function initializeButtons() {
 function onSolveClicked() {
     currentHull = controller.findHull(points);
     currentRect = controller.solveForPoints(points);
-    console.log(currentRect);
+}
+
+function onStartRectsEnumeration() {
+    controller.startRectEnumeration(points);
+    onNextClicked();
 }
 
 function onNextClicked() {
