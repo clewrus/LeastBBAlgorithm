@@ -1,196 +1,197 @@
-
 class RectEnumerator {
-	hull = [];
+    hull = [];
 
-	initPointsIndexes = {};
-	currPointsIndexes = {};
+    initPointsIndexes = {};
+    currPointsIndexes = {};
 
-	anglesToNext = {};
+    anglesToNext = {};
 
-	localPoints = { 
-		top: createVector(), 
-		right: createVector(), 
-		down: createVector(), 
-		left: createVector()
-	};
+    localPoints = {
+        top: createVector(),
+        right: createVector(),
+        down: createVector(),
+        left: createVector()
+    };
 
-	setHull( hull ) {
-		this.hull = hull;
+    setHull(hull) {
+        this.hull = hull;
 
-		this.initPointsIndexes = this.findInitialPointsIndexes();
-		this.currPointsIndexes = { ... this.initPointsIndexes };
+        this.initPointsIndexes = this.findInitialPointsIndexes();
+        this.currPointsIndexes = {...this.initPointsIndexes };
 
-		this.anglesToNext = this.evaluateAnglesToNextVertices();
+        this.anglesToNext = this.evaluateAnglesToNextVertices();
 
-		this.nextSide = this.selectNextSide();
-	}
+        this.nextSide = this.selectNextSide();
+    }
 
-	next() {
-		let a = this.anglesToNext;
-		let b = this.nextSide;
+    next() {
+        let a = this.anglesToNext;
+        let b = this.nextSide;
 
-		console.log( a, b );
-		
-		this.moveCalipers( this.nextSide );
+        this.moveCalipers(this.nextSide);
 
+        this.nextSide = this.selectNextSide();
+    }
 
-		this.nextSide = this.selectNextSide();
-	}
+    hasNext() {
+        return typeof(this.nextSide) != "undefined";
+    }
 
-	hasNext() {
-		return typeof( this.nextSide ) != "undefined";
-	}
+    getCurrent() {
+        if (!this.hasNext()) { return null; }
 
-	getCurrent() {
-		if( !this.hasNext() ) { return null; }
+        const movedPointIndex = this.currPointsIndexes[this.nextSide];
 
-		const movedPointIndex = this.currPointsIndexes[this.nextSide];
+        const rotOrigin = this.hull[movedPointIndex];
+        const nextPoint = this.hull[this.getNextVertexIndex(movedPointIndex)];
 
-		const rotOrigin = this.hull[movedPointIndex];
-		const nextPoint = this.hull[this.getNextVertexIndex(movedPointIndex)];
+        const rot = p5.Vector.sub(nextPoint, rotOrigin).normalize();
+        const invRot = createVector(rot.x, -rot.y);
 
-		const rot = p5.Vector.sub(nextPoint, rotOrigin).normalize();
-		const invRot = createVector( rot.x, -rot.y );
+        for (let side in this.currPointsIndexes) {
+            p5.Vector.sub(this.hull[this.currPointsIndexes[side]], rotOrigin, this.localPoints[side]);
+            this.rotateVectorByRotation(this.localPoints[side], invRot);
+        }
 
-		for( let side in this.currPointsIndexes ) {
-			p5.Vector.sub( this.hull[this.currPointsIndexes[side]], rotOrigin, this.localPoints[side] );
-			this.rotateVectorByRotation( this.localPoints[side], invRot );
-		}
+        const rect = {};
+        rect.max = createVector(-Infinity, -Infinity);
+        rect.min = createVector(Infinity, Infinity);
 
-		const rect = {};
-		rect.max = createVector(-Infinity, -Infinity);
-		rect.min = createVector(Infinity, Infinity);
+        for (let side in this.currPointsIndexes) {
+            rect.max.x = max(rect.max.x, this.localPoints[side].x);
+            rect.min.x = min(rect.min.x, this.localPoints[side].x);
 
-		for( let side in this.currPointsIndexes ) {
-			rect.max.x = max( rect.max.x, this.localPoints[side].x );
-			rect.min.x = min( rect.min.x, this.localPoints[side].x );
+            rect.max.y = max(rect.max.y, this.localPoints[side].y);
+            rect.min.y = min(rect.min.y, this.localPoints[side].y);
+        }
 
-			rect.max.y = max( rect.max.y, this.localPoints[side].y );
-			rect.min.y = min( rect.min.y, this.localPoints[side].y );
-		}
+        rect.minMax = createVector(rect.min.x, rect.max.y);
+        rect.maxMin = createVector(rect.max.x, rect.min.y);
 
-		rect.minMax = createVector( rect.min.x, rect.max.y );
-		rect.maxMin = createVector( rect.max.x, rect.min.y );
-		
-		for( let rectVertex in rect ) {
-			this.rotateVectorByRotation( rect[rectVertex], rot );
-			rect[rectVertex].add( rotOrigin );
-		}
-		
-		return rect;
-	}
+        for (let rectVertex in rect) {
+            this.rotateVectorByRotation(rect[rectVertex], rot);
+            rect[rectVertex].add(rotOrigin);
+        }
 
-	rotateVectorByRotation( vector, rot ) {
-		vector.z = vector.x;
-		vector.x = vector.x * rot.x - vector.y * rot.y;
-		vector.y = vector.z * rot.y + vector.y * rot.x;
-		vector.z = 0;
-	}
+        return rect;
+    }
 
-	findInitialPointsIndexes() {
-		let first = this.hull[0];
-		let extremeVertices = { top: first, down: first, right: first, left: first };
-		let resultIndex = { top: 0, down: 0, right: 0, left: 0 };
+    rotateVectorByRotation(vector, rot) {
+        vector.z = vector.x;
+        vector.x = vector.x * rot.x - vector.y * rot.y;
+        vector.y = vector.z * rot.y + vector.y * rot.x;
+        vector.z = 0;
+    }
 
-		this.hull.forEach((p, i) => {
-			if (extremeVertices.top.y < p.y) {
-				extremeVertices.top = p;
-				resultIndex.top = i;
-			}
+    findInitialPointsIndexes() {
+        let first = this.hull[0];
+        let extremeVertices = { top: first, down: first, right: first, left: first };
+        let resultIndex = { top: 0, down: 0, right: 0, left: 0 };
 
-			if( extremeVertices.down.y > p.y ) {
-				extremeVertices.down = p;
-				resultIndex.down = i;
-			}
-			
-			if( extremeVertices.right.x < p.x ) {
-				extremeVertices.right = p;
-				resultIndex.right = i;
-			}
+        this.hull.forEach((p, i) => {
+            if (extremeVertices.top.y < p.y) {
+                extremeVertices.top = p;
+                resultIndex.top = i;
+            }
 
-			if( extremeVertices.left.x > p.x ) {
-				extremeVertices.left = p;
-				resultIndex.left = i;
-			}
-		});
+            if (extremeVertices.down.y > p.y) {
+                extremeVertices.down = p;
+                resultIndex.down = i;
+            }
 
-		return resultIndex;
-	}
+            if (extremeVertices.right.x < p.x) {
+                extremeVertices.right = p;
+                resultIndex.right = i;
+            }
 
-	selectNextSide() {
-		let maxValue = -Infinity;
-		let nextSide = undefined;
+            if (extremeVertices.left.x > p.x) {
+                extremeVertices.left = p;
+                resultIndex.left = i;
+            }
+        });
 
-		for( let side in this.anglesToNext ) {
-			if( this.rotationCompleated( side ) ||
-				maxValue > this.anglesToNext[side] 
-			) { continue; }
+        return resultIndex;
+    }
 
-			maxValue = this.anglesToNext[side];
-			nextSide = side;
-		}
+    selectNextSide() {
+        let maxValue = -Infinity;
+        let nextSide = undefined;
 
-		return nextSide;
-	}
+        for (let side in this.anglesToNext) {
+            if (this.rotationCompleated(side) ||
+                maxValue > this.anglesToNext[side]
+            ) { continue; }
 
-	moveCalipers( movedSide ) {
-		if( !movedSide ) { return; }
+            maxValue = this.anglesToNext[side];
+            nextSide = side;
+        }
 
-		this.currPointsIndexes[movedSide] = this.getNextVertexIndex(
-			this.currPointsIndexes[movedSide]
-		);
-		
-		this.anglesToNext[movedSide] = this.calcSideAngle( movedSide );
-	}
+        return nextSide;
+    }
 
-	evaluateAnglesToNextVertices() {
-		const anglesToNext = { top: 1, down: 1, right: 1, left: 1 };
+    moveCalipers(movedSide) {
+        if (!movedSide) { return; }
 
-		for( let side in anglesToNext ) {
-			anglesToNext[side] = this.calcSideAngle( side );
-		}
-		
-		return anglesToNext;
-	}
+        this.currPointsIndexes[movedSide] = this.getNextVertexIndex(
+            this.currPointsIndexes[movedSide]
+        );
 
-	calcSideAngle( side ) {
-		switch( side ) {
-			case "top": return -this.calcCurrentDirToNext( "top" ).x;
-			case "right": return this.calcCurrentDirToNext( "right" ).y;
-			case "down": return this.calcCurrentDirToNext( "down" ).x;
-			case "left": return -this.calcCurrentDirToNext( "left" ).y;
-		}
-	}
+        this.anglesToNext[movedSide] = this.calcSideAngle(movedSide);
+    }
 
-	calcCurrentDirToNext( side ) {
-		return this.calcDirBetweenVerteces(
-			this.currPointsIndexes[side],
-			this.getNextVertexIndex( this.currPointsIndexes[side] )
-		);
-	}
+    evaluateAnglesToNextVertices() {
+        const anglesToNext = { top: 1, down: 1, right: 1, left: 1 };
 
-	calcDirBetweenVerteces( fromIndex, destIndex ) {
-		return p5.Vector.sub( this.hull[destIndex], this.hull[fromIndex] ).normalize();
-	}
+        for (let side in anglesToNext) {
+            anglesToNext[side] = this.calcSideAngle(side);
+        }
 
-	getNextVertexIndex( vertIndex, offset = 1 ) {
-		return (vertIndex + offset) % this.hull.length;
-	}
+        return anglesToNext;
+    }
 
-	rotationCompleated( side ) {
-		const nextSide = this.calcNextSide( side );
-		if( this.currPointsIndexes[side] == this.initPointsIndexes[nextSide] ) {
-			console.log( "fixed: " + side );
-		}
-		return this.currPointsIndexes[side] == this.initPointsIndexes[nextSide];		
-	}
+    calcSideAngle(side) {
+        switch (side) {
+            case "top":
+                return -this.calcCurrentDirToNext("top").x;
+            case "right":
+                return this.calcCurrentDirToNext("right").y;
+            case "down":
+                return this.calcCurrentDirToNext("down").x;
+            case "left":
+                return -this.calcCurrentDirToNext("left").y;
+        }
+    }
 
-	calcNextSide( side ) {
-		switch( side ) {
-			case "top": return "left";
-			case "right": return "top";
-			case "down": return "right";
-			case "left": return "down";
-		}
-	}
+    calcCurrentDirToNext(side) {
+        return this.calcDirBetweenVerteces(
+            this.currPointsIndexes[side],
+            this.getNextVertexIndex(this.currPointsIndexes[side])
+        );
+    }
+
+    calcDirBetweenVerteces(fromIndex, destIndex) {
+        return p5.Vector.sub(this.hull[destIndex], this.hull[fromIndex]).normalize();
+    }
+
+    getNextVertexIndex(vertIndex, offset = 1) {
+        return (vertIndex + offset) % this.hull.length;
+    }
+
+    rotationCompleated(side) {
+        const nextSide = this.calcNextSide(side);
+        return this.currPointsIndexes[side] == this.initPointsIndexes[nextSide];
+    }
+
+    calcNextSide(side) {
+        switch (side) {
+            case "top":
+                return "left";
+            case "right":
+                return "top";
+            case "down":
+                return "right";
+            case "left":
+                return "down";
+        }
+    }
 }

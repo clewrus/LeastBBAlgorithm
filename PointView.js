@@ -13,104 +13,103 @@ let currentHull;
 let currentRect;
 
 function setup() {
-	let canvas = createCanvas( WIDTH, HEIGHT );
-	canvas.mouseClicked( addMousePoint );
+    let canvas = createCanvas(WIDTH, HEIGHT);
+    canvas.mouseClicked(addMousePoint);
 
-	initializeController();
-	initializeButtons();
+    initializeController();
+    initializeButtons();
 }
 
 function draw() {
-	background( 230 );
-	drawPoints();
-	drawHull();
+    background(230);
+    drawPoints();
+    drawHull();
 
-	drawRect();
+    drawRect();
 }
 
 function addMousePoint() {
-	let mousePoint = createVector( mouseX, mouseY );
-	points.push( mousePoint );
+    let mousePoint = createVector(mouseX, mouseY);
+    points.push(mousePoint);
 }
 
 function initializeController() {
-	const hull = new HullEvaluator();
-	const rect = new RectEnumerator();
-	const alg = new LeastBBFinder();
+    const hull = new HullEvaluator();
+    const rect = new RectEnumerator();
+    const alg = new LeastBBFinder();
 
-	controller = new LabController( hull, rect, alg )
+    controller = new LabController(hull, rect, alg)
 }
 
 function initializeButtons() {
-	solveButton = createButton( "Solve" );
-	solveButton.mouseClicked( onSolveClicked );
+    solveButton = createButton("Solve");
+    solveButton.mouseClicked(onSolveClicked);
 
-	solveButton = createButton( "Next rect" );
-	solveButton.mouseClicked( onNextClicked );
-	
-	genRandomButton = createButton( "Generate random cloud" );
-	genRandomButton.mouseClicked( onGenRandomClicked );
+    solveButton = createButton("Next rect");
+    solveButton.mouseClicked(onNextClicked);
 
-	clearButton = createButton( "Clear" );
-	clearButton.mouseClicked( onClearClicked );
+    genRandomButton = createButton("Generate random cloud");
+    genRandomButton.mouseClicked(onGenRandomClicked);
+
+    clearButton = createButton("Clear");
+    clearButton.mouseClicked(onClearClicked);
 }
 
-function onSolveClicked () {
-	currentHull = controller.findHull( points );
-	controller.solveForPoints( points );
-	
-	currentRect = controller.getNextRect();
+function onSolveClicked() {
+    currentHull = controller.findHull(points);
+    currentRect = controller.solveForPoints(points);
+    console.log(currentRect);
 }
 
 function onNextClicked() {
-	currentRect = controller.getNextRect();
+    currentRect = controller.getNextRect();
 }
 
-function onGenRandomClicked () {
-	for( let i = 0; i < NUM_OF_RAND_POINTS; i++ ) {
-		let dir = p5.Vector.random2D();
-		let length = random( 0.3 * width );
+function onGenRandomClicked() {
+    for (let i = 0; i < NUM_OF_RAND_POINTS; i++) {
+        let dir = p5.Vector.random2D();
+        let length = random(0.3 * width);
 
-		let randPos = dir.mult(length).add( width / 2, height / 2 );
-		points.push( randPos );
-	}
+        let randPos = dir.mult(length).add(width / 2, height / 2);
+        points.push(randPos);
+    }
 }
 
-function onClearClicked () {
-	points.length = 0;
-	currentHull = null;
-	currentRect = null;
+function onClearClicked() {
+    points.length = 0;
+    currentHull = null;
+    currentRect = null;
 }
 
 function drawPoints() {
-	noStroke();
-	fill( 240, 20, 20 );
+    noStroke();
+    fill(240, 20, 20);
 
-	points.forEach( pos => ellipse( pos.x, pos.y, POINT_R ) );
+    points.forEach(pos => ellipse(pos.x, pos.y, POINT_R));
 }
 
 function drawHull() {
-	if( !(currentHull instanceof Array) ) { return; }
-	if( currentHull.length <= 1 ) { return; }
+    if (!(currentHull instanceof Array)) { return; }
+    if (currentHull.length <= 1) { return; }
 
-	for( let i = 0; i < currentHull.length - 1; i++ ) {
-		drawHullEdge( currentHull[i], currentHull[(i + 1)])
-	}
+    for (let i = 0; i < currentHull.length - 1; i++) {
+        drawHullEdge(currentHull[i], currentHull[(i + 1)])
+    }
 
-	drawHullEdge( currentHull[0], currentHull[currentHull.length - 1] );
+    drawHullEdge(currentHull[0], currentHull[currentHull.length - 1]);
 }
 
-function drawHullEdge( v1, v2 ) {
-	stroke( 0 );
-	strokeWeight( 2 );
+function drawHullEdge(v1, v2) {
+    stroke(0);
+    strokeWeight(2);
 
-	line( v1.x, v1.y, v2.x, v2.y );
+    line(v1.x, v1.y, v2.x, v2.y);
 }
 
 function drawRect() {
-	if( currentRect == null ) { return; }	
-	drawHullEdge( currentRect.min, currentRect.minMax );
-	drawHullEdge( currentRect.minMax, currentRect.max );
-	drawHullEdge( currentRect.max, currentRect.maxMin );
-	drawHullEdge( currentRect.maxMin, currentRect.min );
+    if (currentRect == null) { return; }
+    drawHullEdge(currentRect.min, currentRect.minMax);
+    drawHullEdge(currentRect.minMax, currentRect.max);
+    drawHullEdge(currentRect.max, currentRect.maxMin);
+    drawHullEdge(currentRect.maxMin, currentRect.min);
 }
